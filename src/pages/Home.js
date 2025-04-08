@@ -5,6 +5,7 @@ import ChatDisplay from '../components/ChatDisplay';
 import Avatar from '../components/Avatar';
 import useSpeech from '../hooks/useSpeech';
 import useTTS from '../hooks/useTTS';
+import { fetchGPT4oResponse } from '../api/openai';
 
 const agentLabelMap = {
   simple: '간단 질문 아바타',
@@ -18,23 +19,25 @@ const Home = () => {
   const { speak } = useTTS();
 
   const handleSendText = async (text) => {
-    // 사용자 메시지 추가
     const newMessages = [...messages, { sender: 'user', text }];
     setMessages(newMessages);
-
-    // 💡 임시 응답 데이터
-    const aiResponse = `이건 "${text}"에 대한 임시 답변입니다.`;
-
-    // AI 메시지 추가 및 TTS 실행
-    setTimeout(() => {
+  
+    try {
+      const aiResponse = await fetchGPT4oResponse(newMessages);
+  
+      // 응답 메시지 추가 및 TTS 실행
       setMessages((prev) => [...prev, { sender: 'bot', text: aiResponse }]);
       speak(aiResponse);
-    }); // 답변이 약간 딜레이 되어 오는 것처럼 보여줌
+    } catch (err) {
+      const errorMsg = 'GPT 응답 중 오류가 발생했습니다.';
+      setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
+      speak(errorMsg);
+    }
   };
 
   const { startListening } = useSpeech(handleSendText);
 
-  // 👉 쿼리 파라미터로 전달된 agent 텍스트 가져오기
+  // 쿼리 파라미터로 전달된 agent 텍스트 가져오기
   const searchParams = new URLSearchParams(location.search);
   const agentKey = searchParams.get('agent');
   const agentTitle = agentLabelMap[agentKey] || '기본 아바타';
