@@ -1,13 +1,37 @@
 const useTTS = () => {
   const speak = async (text) => {
-    try {
-      //테스트용: 임시 MP3 파일로 대체
-      const audio = new Audio('/sample.mp3');
-      await audio.play();
+    const apiKey = process.env.REACT_APP_AZURE_TTS_KEY;;
+    const region = process.env.REACT_APP_AZURE_TTS_REGION;
 
-      //실제 구현 시에는 Azure TTS API 결과 URL을 여기에 넣어야 합니다
+    const endpoint = `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+
+    const headers = {
+      'Ocp-Apim-Subscription-Key': apiKey,
+      'Content-Type': 'application/ssml+xml',
+      'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3',
+    };
+
+    const ssml = `
+      <speak version='1.0' xml:lang='en-US'>
+        <voice xml:lang='en-US' xml:gender='Female' name='en-US-JennyNeural'>
+          ${text}
+        </voice>
+      </speak>`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: ssml,
+      });
+
+      const arrayBuffer = await response.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.play();
     } catch (err) {
-      console.error('TTS 재생 오류:', err);
+      console.error('🔊 TTS 오류:', err);
     }
   };
 
@@ -15,4 +39,3 @@ const useTTS = () => {
 };
 
 export default useTTS;
-

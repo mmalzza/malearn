@@ -6,6 +6,7 @@ import Avatar from '../components/Avatar';
 import useSpeech from '../hooks/useSpeech';
 import useTTS from '../hooks/useTTS';
 import { fetchGPT4oResponse } from '../api/openai';
+import TestTTS from '../components/TestTTS';
 
 const agentLabelMap = {
   simple: '간단 질문 아바타',
@@ -58,6 +59,7 @@ const Home = () => {
       <div className="w-2/3 flex flex-col justify-between">
         <ChatDisplay messages={messages} />
         <ChatInput onSendText={handleSendText} onToggleMic={startListening} />
+        <TestTTS />
       </div>
     </div>
   );
